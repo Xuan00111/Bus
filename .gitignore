@@ -1,0 +1,17 @@
+# JetBrains PyCharm/IDEA 配置文件（全部忽略）
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+build/
+
+# Python 编译文件
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# 其他临时文件
+*.log
+.DS_Store
