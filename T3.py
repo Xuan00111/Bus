@@ -9,7 +9,7 @@ def analyze_route_stops(df, route_col='线路号', stops_col='ride_stops'):
 
     Parameters
     ----------
-    df : pd.DataFrame
+    df : cleaned_ICData
         预处理后的数据集
     route_col : str
         线路号列名
