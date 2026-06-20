@@ -7,7 +7,7 @@ from matplotlib.patches import Patch
 # 1. 读取预处理后的数据
 # ------------------------------
 df = pd.read_csv('cleaned_ICData.csv', parse_dates=['交易时间'])
-df['hour'] = df['hour'].astype(int)          # 确保小时为整数
+df['hour'] = df['交易时间'].dt.hour          # 从交易时间提取小时
 
 # 仅保留刷卡类型 == 0 的记录
 mask_type0 = df['刷卡类型'] == 0

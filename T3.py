@@ -37,12 +37,12 @@ if __name__ == '__main__':
     # 删除 ride_stops 为 NaN 的记录（若有）
     df = df.dropna(subset=['ride_stops'])
 
-    # 注意：实际数据中线路列名为 '线路'，调用时传入正确的参数
-    route_analysis = analyze_route_stops(df, route_col='线路', stops_col='ride_stops')
+    # 线路列名为 '线路号'（与清洗后CSV一致）
+    route_analysis = analyze_route_stops(df, route_col='线路号', stops_col='ride_stops')
 
     # 打印结果（前10行）
-    print("===== 各线路平均搭乘站点数（前10名）=====")
-    print(route_analysis.head(10))
+    print("[任务3] 每条线路的平均搭乘站点数及标准差（前10行）：")
+    print(route_analysis.head(10).reset_index(drop=True).to_string())
 
     # 2. 可视化：取均值最高的前15条线路
     top15 = route_analysis.head(15).copy()
@@ -55,9 +55,9 @@ if __name__ == '__main__':
     # 水平条形图：添加 hue='线路' 和 legend=False 以避免 FutureWarning
     ax = sns.barplot(
         data=top15,
-        y='线路',
+        y='线路号',
         x='mean_stops',
-        hue='线路',          # 将线路号映射到色调
+        hue='线路号',          # 将线路号映射到色调
         palette=palette,
         orient='h',
         legend=False        # 关闭自动生成的图例（不需要）

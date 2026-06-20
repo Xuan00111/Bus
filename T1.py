@@ -1,51 +1,59 @@
 import pandas as pd
 
-# ========== 原有读取和输出（完全保持不变） ==========
+# ========== 读取数据 ==========
 df = pd.read_csv('ICData.csv', header=None)
 
-print("数据集前 5 行：")
-print(df.head())
+# 提取列名（第一行）并设置
+col_names = df.iloc[0].tolist()
+df_data = df.iloc[1:].copy()
+df_data.columns = col_names
+df_data = df_data.reset_index(drop=True)
 
-print("\n数据集基本信息：")
-print(f"行数: {df.shape[0]}")
-print(f"列数: {df.shape[1]}")
-print("\n各列数据类型：")
-print(df.dtypes)
+# 转换数据类型：尝试将数值列转为 int/float，时间列保持 object
+for c in df_data.columns:
+    try:
+        df_data[c] = pd.to_numeric(df_data[c])
+    except (ValueError, TypeError):
+        pass  # 保持原类型（如交易时间）
 
-# ========== 新增：数据清洗与保存（不影响上述输出） ==========
-# 1. 第0行是列名，去掉这一行，并重置索引
-df_clean = df.iloc[1:].reset_index(drop=True)
+# ========== 1. 数据集前 5 行 ==========
+print("数据集前5行：")
+print(df_data.head(5).to_string())
 
-# 2. 指定列名（根据示例数据字段顺序）
-df_clean.columns = [
-    '交易类型', '交易时间', '交易卡号', '刷卡类型',
-    '线路', '车辆', '上车站点', '下车站点',
-    '驾驶员编号', '运营公司编号'
-]
+# ========== 2. 基本信息 ==========
+n_rows, n_cols = df_data.shape
+print(f"\n基本信息：")
+print(f"行数={n_rows}, 列数={n_cols}")
 
-# 3. 交易时间转换为 datetime 类型，并提取小时
-df_clean['交易时间'] = pd.to_datetime(df_clean['交易时间'])
-df_clean['hour'] = df_clean['交易时间'].dt.hour
+# 各列数据类型
+print(df_data.dtypes)
 
-# 4. 计算搭乘站点数 |下车站点 - 上车站点|
-df_clean['ride_stops'] = abs(df_clean['下车站点'].astype(int) - df_clean['上车站点'].astype(int))
+# ========== 3. 数据清洗：构造 ride_stops ==========
+# 先将相关列转为数值
+df_data['上车站点'] = pd.to_numeric(df_data['上车站点'], errors='coerce')
+df_data['下车站点'] = pd.to_numeric(df_data['下车站点'], errors='coerce')
 
-# 5. 删除 ride_stops == 0 的记录
-initial_rows = len(df_clean)
-df_clean = df_clean[df_clean['ride_stops'] != 0]
-deleted_ride = initial_rows - len(df_clean)
+# 计算 ride_stops
+df_data['ride_stops'] = abs(df_data['下车站点'] - df_data['上车站点'])
 
-# 6. 检查并删除缺失值
-before_dropna = len(df_clean)
-df_clean = df_clean.dropna()
-deleted_missing = before_dropna - len(df_clean)
+# 删除 ride_stops==0 或无法计算（NaN）的记录
+before_clean = len(df_data)
+df_clean = df_data[df_data['ride_stops'].notna() & (df_data['ride_stops'] != 0)]
+after_clean = len(df_clean)
+deleted_count = before_clean - after_clean
 
-# 7. 可选：打印清洗统计信息（新增输出，但不影响原有输出）
-print("\n[新增] 数据清洗统计：")
-print(f"删除 ride_stops==0 的记录数: {deleted_ride}")
-print(f"删除缺失值记录数: {deleted_missing}")
-print(f"清洗后数据行数: {len(df_clean)}")
+print(f"\n构造 ride_stops 后删除异常记录（ride_stops==0/无法计算）行数：{deleted_count}")
 
-# 8. 保存清洗后的数据
+# ========== 4. 缺失值检查 ==========
+print("\n各列缺失值数量：")
+missing = df_clean.isnull().sum()
+if missing.sum() == 0:
+    print("无缺失值")
+else:
+    for col in missing.index:
+        if missing[col] > 0:
+            print(f"{col}: {missing[col]}")
+
+# ========== 5. 保存清洗后数据 ==========
 df_clean.to_csv('cleaned_ICData.csv', index=False)
-print("清洗后数据已保存为 cleaned_ICData.csv")
+print("\n清洗后数据已保存为 cleaned_ICData.csv")

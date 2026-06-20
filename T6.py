@@ -12,22 +12,22 @@ df = df[df['刷卡类型'] == 0]
 # 定义四个维度及其对应的列名
 dimensions = {
     'Driver': '驾驶员编号',
-    'Route': '线路',
+    'Route': '线路号',
     'Boarding Station': '上车站点',
-    'Vehicle': '车辆'
+    'Vehicle': '车辆编号'
 }
 
 # 存储各维度的Top10结果
 top_dict = {}
-print("===== 服务人次排名（基于有效刷卡记录数）=====")
 for name, col in dimensions.items():
     # 统计每个实体出现的次数（即服务人次）
     counts = df[col].value_counts()
     top10 = counts.head(10)
     top_dict[name] = top10
-    print(f"\nTop 10 {name}s：")
-    for i, (entity, cnt) in enumerate(top10.items(), 1):
-        print(f"{i}. {entity}: {cnt} 次")
+    if name == 'Vehicle':
+        print(f"\n===== {name}s Top 10 =====")
+        for i, (entity, cnt) in enumerate(top10.items(), 1):
+            print(f"Top{i}: {entity} Count={cnt}")
 
 # 构造热力图数据：4行，每行10个数值（按Top1→Top10顺序）
 heatmap_data = []

@@ -5,11 +5,11 @@ import os
 df = pd.read_csv('cleaned_ICData.csv', parse_dates=['交易时间'])
 
 # 确保线路列为数值类型（若读取时为字符串则转换）
-df['线路'] = pd.to_numeric(df['线路'], errors='coerce')
-df = df.dropna(subset=['线路'])
+df['线路号'] = pd.to_numeric(df['线路号'], errors='coerce')
+df = df.dropna(subset=['线路号'])
 
 # 1. 筛选线路号在 1101 至 1120 之间的记录
-mask = (df['线路'] >= 1101) & (df['线路'] <= 1120)
+mask = (df['线路号'] >= 1101) & (df['线路号'] <= 1120)
 df_filtered = df[mask].copy()
 
 # 2. 创建文件夹（如果已存在则不报错）
@@ -21,11 +21,11 @@ file_paths = []
 
 # 3. 对每条线路，提取车辆编号与驾驶员编号的去重对，写入文件
 for route in range(1101, 1121):
-    df_route = df_filtered[df_filtered['线路'] == route]
+    df_route = df_filtered[df_filtered['线路号'] == route]
     # 提取 (车辆, 驾驶员) 去重对
-    pairs = df_route[['车辆', '驾驶员编号']].drop_duplicates()
+    pairs = df_route[['车辆编号', '驾驶员编号']].drop_duplicates()
     # 按车辆编号排序（可选，便于查看）
-    pairs = pairs.sort_values('车辆')
+    pairs = pairs.sort_values('车辆编号')
 
     # 文件路径
     file_path = os.path.join(output_dir, f'{route}.txt')
@@ -34,7 +34,7 @@ for route in range(1101, 1121):
     with open(file_path, 'w', encoding='utf-8') as f:
         f.write(f'线路号: {route}\n')
         for _, row in pairs.iterrows():
-            f.write(f'{int(row["车辆"])}\t{int(row["驾驶员编号"])}\n')
+            f.write(f'{int(row["车辆编号"])}\t{int(row["驾驶员编号"])}\n')
 
     file_paths.append(file_path)
 
