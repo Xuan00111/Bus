@@ -2,18 +2,12 @@
 main.py — 公共交通IC刷卡数据分析系统 主菜单
 =============================================
 通过系统菜单可单独调用 T1~T6 任一功能，也可一键运行全部功能。
-
-提示：也可以直接在命令行运行 python T1.py ~ python T6.py 来单独执行对应任务。
 """
-
-import subprocess
-import sys
 import os
 
-# 脚本所在目录（确保在任何位置运行 main.py 都能正确定位 T 脚本）
-SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))  # 脚本所在目录
 
-# 任务注册表
+# 任务注册表：编号 → 脚本文件 + 描述
 TASKS = {
     '1': {'file': 'T1.py', 'desc': '数据清洗与预处理'},
     '2': {'file': 'T2.py', 'desc': '早晚时段刷卡量统计与24小时分布可视化'},
@@ -24,8 +18,8 @@ TASKS = {
 }
 
 
-def run_task(task_id: str) -> int:
-    """运行单个任务，返回子进程退出码。"""
+def run_task(task_id: str):
+    """读取并执行单个任务脚本"""
     task = TASKS[task_id]
     filepath = os.path.join(SCRIPT_DIR, task['file'])
 
@@ -34,41 +28,30 @@ def run_task(task_id: str) -> int:
     print(f"  脚本：{task['file']}")
     print(f"{'=' * 60}\n")
 
-    result = subprocess.run(
-        [sys.executable, filepath],
-        cwd=SCRIPT_DIR,
-    )
-
-    if result.returncode == 0:
+    try:
+        with open(filepath, encoding='utf-8') as f:
+            exec(compile(f.read(), filepath, 'exec'))  # 编译后执行，出错能定位到脚本行号
         print(f"\n✓ [{task_id}] {task['file']} 执行完毕。")
-    else:
-        print(f"\n✗ [{task_id}] {task['file']} 执行出错（返回码：{result.returncode}）。")
-
-    return result.returncode
+    except Exception as e:
+        print(f"\n✗ [{task_id}] {task['file']} 执行出错：{e}")
 
 
-def run_all() -> None:
-    """按顺序执行全部 6 个任务（T1 → T6）。"""
+def run_all():
+    """顺序执行 T1 → T6"""
     print("\n" + "=" * 60)
     print("  一键运行全部任务（T1 → T6）")
     print("=" * 60)
 
-    failed = []
     for task_id in ['1', '2', '3', '4', '5', '6']:
-        ret = run_task(task_id)
-        if ret != 0:
-            failed.append(task_id)
+        run_task(task_id)
 
     print("\n" + "=" * 60)
-    if failed:
-        print(f"  全部任务执行完毕，以下任务异常：{', '.join(failed)}")
-    else:
-        print("  全部 6 个任务均成功执行完毕！")
+    print("  全部 6 个任务执行完毕！")
     print("=" * 60)
 
 
-def show_menu() -> None:
-    """显示系统主菜单。"""
+def show_menu():
+    """打印系统主菜单"""
     print("\n" + "=" * 60)
     print("   公共交通IC刷卡数据分析系统")
     print("=" * 60)
@@ -81,8 +64,8 @@ def show_menu() -> None:
     print("-" * 60)
 
 
-def main() -> None:
-    """主循环。"""
+def main():
+    """主循环：显示菜单 → 读取输入 → 执行对应操作"""
     while True:
         show_menu()
         try:
